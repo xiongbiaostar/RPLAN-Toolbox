@@ -1,0 +1,122 @@
+[
+    {
+        "ID": 1,
+        "thickness": 2,
+        "RoomID": 0,
+        "PointLeftUp": [
+            72,
+            181
+        ],
+        "PointRightDown": [
+            72,
+            199
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "horizontal"
+    },
+    {
+        "ID": 2,
+        "thickness": 2,
+        "RoomID": 1,
+        "PointLeftUp": [
+            72,
+            139
+        ],
+        "PointRightDown": [
+            72,
+            149
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "horizontal"
+    },
+    {
+        "ID": 3,
+        "thickness": 2,
+        "RoomID": 2,
+        "PointLeftUp": [
+            165,
+            61
+        ],
+        "PointRightDown": [
+            165,
+            79
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "horizontal"
+    },
+    {
+        "ID": 4,
+        "thickness": 2,
+        "RoomID": 2,
+        "PointLeftUp": [
+            185,
+            135
+        ],
+        "PointRightDown": [
+            185,
+            159
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "horizontal"
+    },
+    {
+        "ID": 5,
+        "thickness": 2,
+        "RoomID": 3,
+        "PointLeftUp": [
+            84,
+            87
+        ],
+        "PointRightDown": [
+            102,
+            87
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "vertical"
+    },
+    {
+        "ID": 6,
+        "thickness": 2,
+        "RoomID": 4,
+        "PointLeftUp": [
+            115,
+            61
+        ],
+        "PointRightDown": [
+            115,
+            79
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "horizontal"
+    },
+    {
+        "ID": 7,
+        "thickness": 2,
+        "RoomID": 5,
+        "PointLeftUp": [
+            133,
+            229
+        ],
+        "PointRightDown": [
+            178,
+            229
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "vertical"
+    },
+    {
+        "ID": 8,
+        "thickness": 2,
+        "RoomID": 5,
+        "PointLeftUp": [
+            185,
+            209
+        ],
+        "PointRightDown": [
+            185,
+            226
+        ],
+        "ExtentionDirection": "outward",
+        "Direction": "horizontal"
+    }
+]
