@@ -1,0 +1,492 @@
+{
+    "rooms": [
+        {
+            "ID": 1,
+            "PointMin": [
+                161,
+                72
+            ],
+            "PointMax": [
+                221,
+                125
+            ],
+            "type": 1
+        },
+        {
+            "ID": 2,
+            "PointMin": [
+                130,
+                72
+            ],
+            "PointMax": [
+                158,
+                108
+            ],
+            "type": 3
+        },
+        {
+            "ID": 3,
+            "PointMin": [
+                28,
+                111
+            ],
+            "PointMax": [
+                204,
+                185
+            ],
+            "type": 0
+        },
+        {
+            "ID": 4,
+            "PointMin": [
+                87,
+                72
+            ],
+            "PointMax": [
+                127,
+                125
+            ],
+            "type": 7
+        },
+        {
+            "ID": 5,
+            "PointMin": [
+                53,
+                115
+            ],
+            "PointMax": [
+                84,
+                145
+            ],
+            "type": 2
+        },
+        {
+            "ID": 6,
+            "PointMin": [
+                207,
+                128
+            ],
+            "PointMax": [
+                229,
+                185
+            ],
+            "type": 9
+        }
+    ],
+    "windows": [
+        {
+            "ID": 1,
+            "thickness": 2,
+            "RoomID": 0,
+            "PointLeftUp": [
+                72,
+                181
+            ],
+            "PointRightDown": [
+                72,
+                199
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 2,
+            "thickness": 2,
+            "RoomID": 1,
+            "PointLeftUp": [
+                72,
+                139
+            ],
+            "PointRightDown": [
+                72,
+                149
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 3,
+            "thickness": 2,
+            "RoomID": 2,
+            "PointLeftUp": [
+                165,
+                61
+            ],
+            "PointRightDown": [
+                165,
+                79
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 4,
+            "thickness": 2,
+            "RoomID": 2,
+            "PointLeftUp": [
+                185,
+                135
+            ],
+            "PointRightDown": [
+                185,
+                159
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 5,
+            "thickness": 2,
+            "RoomID": 3,
+            "PointLeftUp": [
+                84,
+                87
+            ],
+            "PointRightDown": [
+                102,
+                87
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "vertical"
+        },
+        {
+            "ID": 6,
+            "thickness": 2,
+            "RoomID": 4,
+            "PointLeftUp": [
+                115,
+                61
+            ],
+            "PointRightDown": [
+                115,
+                79
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 7,
+            "thickness": 2,
+            "RoomID": 5,
+            "PointLeftUp": [
+                133,
+                229
+            ],
+            "PointRightDown": [
+                178,
+                229
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "vertical"
+        },
+        {
+            "ID": 8,
+            "thickness": 2,
+            "RoomID": 5,
+            "PointLeftUp": [
+                185,
+                209
+            ],
+            "PointRightDown": [
+                185,
+                226
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        }
+    ],
+    "doors": [
+        {
+            "ID": 1,
+            "RoomID": 0,
+            "PointLeftUp": [
+                108,
+                159
+            ],
+            "PointRightDown": [
+                120,
+                159
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "vertical"
+        },
+        {
+            "ID": 2,
+            "RoomID": 1,
+            "PointLeftUp": [
+                108,
+                128
+            ],
+            "PointRightDown": [
+                108,
+                140
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 3,
+            "RoomID": 3,
+            "PointLeftUp": [
+                125,
+                87
+            ],
+            "PointRightDown": [
+                125,
+                99
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 4,
+            "RoomID": 4,
+            "PointLeftUp": [
+                148,
+                53
+            ],
+            "PointRightDown": [
+                148,
+                65
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "horizontal"
+        },
+        {
+            "ID": 5,
+            "RoomID": 5,
+            "PointLeftUp": [
+                135,
+                207
+            ],
+            "PointRightDown": [
+                177,
+                207
+            ],
+            "ExtentionDirection": "outward",
+            "Direction": "vertical"
+        }
+    ],
+    "edges": [
+        {
+            "ID": 1,
+            "Room1": 0,
+            "Room2": 1,
+            "Relation": 6
+        },
+        {
+            "ID": 2,
+            "Room1": 0,
+            "Room2": 2,
+            "Relation": 2
+        },
+        {
+            "ID": 3,
+            "Room1": 0,
+            "Room2": 5,
+            "Relation": 0
+        },
+        {
+            "ID": 4,
+            "Room1": 1,
+            "Room2": 2,
+            "Relation": 2
+        },
+        {
+            "ID": 5,
+            "Room1": 1,
+            "Room2": 3,
+            "Relation": 6
+        },
+        {
+            "ID": 6,
+            "Room1": 2,
+            "Room2": 3,
+            "Relation": 7
+        },
+        {
+            "ID": 7,
+            "Room1": 2,
+            "Room2": 4,
+            "Relation": "Room2 is in Room1"
+        },
+        {
+            "ID": 8,
+            "Room1": 2,
+            "Room2": 5,
+            "Relation": 3
+        },
+        {
+            "ID": 9,
+            "Room1": 3,
+            "Room2": 4,
+            "Relation": 1
+        }
+    ],
+    "walls": [
+        {
+            "ID": 1,
+            "Vertices": [
+                [
+                    72.0,
+                    159.5
+                ],
+                [
+                    72.0,
+                    221.0
+                ],
+                [
+                    128.0,
+                    221.0
+                ],
+                [
+                    128.0,
+                    159.5
+                ]
+            ],
+            "Thickness": 6
+        },
+        {
+            "ID": 2,
+            "Vertices": [
+                [
+                    72.0,
+                    128.5
+                ],
+                [
+                    72.0,
+                    159.5
+                ],
+                [
+                    108.0,
+                    159.5
+                ],
+                [
+                    108.0,
+                    128.5
+                ]
+            ],
+            "Thickness": 6
+        },
+        {
+            "ID": 3,
+            "Vertices": [
+                [
+                    165.0,
+                    87.0
+                ],
+                [
+                    165.0,
+                    28.0
+                ],
+                [
+                    148.0,
+                    28.0
+                ],
+                [
+                    148.0,
+                    87.0
+                ],
+                [
+                    125.0,
+                    87.0
+                ],
+                [
+                    125.0,
+                    128.5
+                ],
+                [
+                    108.0,
+                    128.5
+                ],
+                [
+                    108.0,
+                    159.5
+                ],
+                [
+                    128.0,
+                    159.5
+                ],
+                [
+                    128.0,
+                    207.0
+                ],
+                [
+                    185.0,
+                    207.0
+                ],
+                [
+                    185.0,
+                    87.0
+                ]
+            ],
+            "Thickness": 6
+        },
+        {
+            "ID": 4,
+            "Vertices": [
+                [
+                    72.0,
+                    87.0
+                ],
+                [
+                    72.0,
+                    128.5
+                ],
+                [
+                    125.0,
+                    128.5
+                ],
+                [
+                    125.0,
+                    87.0
+                ]
+            ],
+            "Thickness": 6
+        },
+        {
+            "ID": 5,
+            "Vertices": [
+                [
+                    115.0,
+                    53.0
+                ],
+                [
+                    115.0,
+                    87.0
+                ],
+                [
+                    148.0,
+                    87.0
+                ],
+                [
+                    148.0,
+                    53.0
+                ]
+            ],
+            "Thickness": 6
+        },
+        {
+            "ID": 6,
+            "Vertices": [
+                [
+                    128.0,
+                    229.0
+                ],
+                [
+                    185.0,
+                    229.0
+                ],
+                [
+                    185.0,
+                    207.0
+                ],
+                [
+                    128.0,
+                    207.0
+                ]
+            ],
+            "Thickness": 6
+        }
+    ]
+}
