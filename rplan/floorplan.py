@@ -1,3 +1,4 @@
+#处理房屋布局的图像
 from skimage import io
 from skimage import morphology,feature,transform,measure
 from pathlib import Path
@@ -17,9 +18,11 @@ class Floorplan():
     def category(self): return self.image[...,1]
 
     @property
+    #获取并返回这个图像的蓝色通道
     def instance(self): return self.image[...,2]
     
     @property
+    #获取并返回这个图像的Alpha通道
     def inside(self): return self.image[...,3]
 
     def __init__(self,file_path):
@@ -29,6 +32,7 @@ class Floorplan():
         self.h,self.w,self.c = self.image.shape
         
         self.front_door = None
+        self.doors= {'door_y1': 0, 'door_x1': 0, 'door_y2': 0, 'door_x2': 0}
         self.exterior_boundary = None
         self.rooms = None
         self.edges = None
@@ -37,6 +41,7 @@ class Floorplan():
         self.graph = None
 
         self._get_front_door()
+        # self.front_door = np.array([min_h,min_w,max_h,max_w],dtype=int)
         self._get_exterior_boundary()
         self._get_rooms()
         self._get_edges()
@@ -45,13 +50,13 @@ class Floorplan():
         return f'{self.name},({self.h},{self.w},{self.c})'
 
     def _get_front_door(self):
-        front_door_mask = self.boundary==255
+        front_door_mask = self.boundary == 255
         # fast bbox
         # min_h,max_h = np.where(np.any(front_door_mask,axis=1))[0][[0,-1]]
-        # min_w,max_w = np.where(np.any(front_door_mask,axis=0))[0][[0,-1]]  
+        # min_w,max_w = np.where(np.any(front_door_mask,axis=0))[0][[0,-1]]
         # self.front_door = np.array([min_h,min_w,max_h,max_w],dtype=int)
         region = measure.regionprops(front_door_mask.astype(int))[0]
-        self.front_door = np.array(region.bbox,dtype=int)
+        self.front_door = np.array(region.bbox, dtype=int)
 
     def _get_exterior_boundary(self):
         if self.front_door is None: self._get_front_door()
@@ -199,12 +204,16 @@ class Floorplan():
 
     def _get_rooms(self):
         rooms = []
+        #取并返回房间布局图像中每个房间的蓝色通道
         regions = measure.regionprops(self.instance)
         for region in regions:
-            c = stats.mode(self.category[region.coords[:,0],region.coords[:,1]])[0][0]
-            y0,x0,y1,x1 = np.array(region.bbox) 
+            #c = stats.mode(self.category[region.coords[:,0],region.coords[:,1]])[0][0]
+            #c = stats.mode(self.category[region.coords[:, 0], region.coords[:, 1]])[0]
+            c = stats.mode([self.category[x[0], x[1]] for x in region.coords])[0]
+            y0,x0,y1,x1 = np.array(region.bbox)
             rooms.append([y0,x0,y1,x1,c])
         self.rooms = np.array(rooms,dtype=int)
+        return self.rooms
 
     def _get_edges(self,th=9):
         if self.rooms is None: self._get_rooms()
@@ -226,6 +235,7 @@ class Floorplan():
                 
         self.edges = np.array(edges,dtype=int)
 
+#从图像中提取门的位置
     def _get_archs(self):
         '''
         Interior doors
@@ -262,6 +272,7 @@ class Floorplan():
 
         self.archs = np.array(archs,dtype=int)
 
+#生成一个表示房屋布局的图
     def _get_graph(self,th=9):
         '''
         More detail graph
@@ -344,19 +355,19 @@ class Floorplan():
         self.graph = graph
         self.door_pos = door_pos
 
-    def to_dict(self,xyxy=True,dtype=int):
+    def to_dict(self, xyxy=True, dtype=int):
         '''
         Compress data, notice:
         !!! int->uint8: a(uint8)+b(uint8) may overflow !!!
         '''
         return {
-            'name'      :self.name,
-            'types'     :self.rooms[:,-1].astype(dtype),
-            'boxes'     :(self.rooms[:,[1,0,3,2]]).astype(dtype) 
-            if xyxy else self.rooms[:,:4].astype(dtype),
-            'boundary'  :self.exterior_boundary[:,[1,0,2,3]].astype(dtype)
+            'name': self.name,
+            'types': self.rooms[:, -1].astype(dtype),
+            'boxes': (self.rooms[:, [1, 0, 3, 2]]).astype(dtype)
+            if xyxy else self.rooms[:, :4].astype(dtype),
+            'boundary': self.exterior_boundary[:, [1, 0, 2, 3]].astype(dtype)
             if xyxy else self.exterior_boundary.astype(dtype),
-            'edges'     :self.edges.astype(dtype)
+            'edges': self.edges.astype(dtype)
         }
 
 if __name__ == "__main__":

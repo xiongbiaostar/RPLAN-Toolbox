@@ -1,3 +1,4 @@
+#从给定的边界点数组中计算转移函数，并检索与该转移函数相似的边界点
 import numpy as np
 
 def compute_tf(boundary):

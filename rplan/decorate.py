@@ -1,3 +1,4 @@
+#处理门和窗户的提取
 import numpy as np
 import copy
 

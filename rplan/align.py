@@ -1,3 +1,5 @@
+#对前门进行对齐
+
 import numpy as np
 import matlab
 import matlab.engine as engine
@@ -27,9 +29,10 @@ def align_fp(boundary, boxes, types, edges, image, threshold, dtype=int):
 
     boxes_aligned   = np.array(boxes_aligned,dtype=dtype)
     order           = np.array(order,dtype=dtype).reshape(-1)-1
-    room_boundaries = np.array([np.array(rb,dtype=float) for rb in room_boundaries]) # poly with hole has value 'nan'
-
-    return boxes_aligned, order, room_boundaries
+    #room_boundaries = np.array([np.array(rb,dtype=float) for rb in room_boundaries]) # poly with hole has value 'nan'
+    # 使用 dtype=object 以处理形状不一致或包含 NaN 的情况
+    room_boundaries = np.array([np.array(rb, dtype=float) for rb in room_boundaries], dtype=object)
+    return boxes_aligned, order, room_boundaries,edges
 
 def align_fp_gt(boundary, boxes, types, edges, dtype=int):
     return align_fp(boundary, boxes, types, edges, [], GT_ThRESHOLD, dtype)
