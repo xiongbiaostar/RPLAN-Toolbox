@@ -1,104 +1,45 @@
-# RPLAN-ToolBox
-A tool box for RPLAN dataset.
+# RPLAN-json
 
-![](./output/plot.png)
-![](./output/tf.png)
-# Usage
+## 1.annotation.json表示
 
-0. Install dependency
-
-    - python>=3.7
-
-    - matlab (for alignment): [Install MATLAB Engine API for Python](https://www.mathworks.com/help/matlab/matlab_external/install-matlab-engine-api-for-python-in-nondefault-locations.html)
-
-    - numpy, scipy, scikit-image, matplotlib
-
-    - shapely (for visualization)
-
-    - faiss (Linux only, for clustering)
+```
+"line":[{"direction":{}, "ID": , "point": []}]			direction表示点延申的方向， 
 
 
-1. Load a floorplan
+"semantics":[{"planeID":[], "type": "outwall"  , "ID": } ,
 
-```python
-RPLAN_DIR = './data'
-file_path = f'{RPLAN_DIR}/0.png'
-fp = Floorplan(file_path)
-img = fp.image
+			 {"planeID":[], "type": "window"  , "ID": } ]
+
+
+"junctions":[{"coordinate": [ , , ,], "ID": } ]     #junction里保存所有点的信息。
+
+"plane": [{"offset": , "type": , "ID": , "normal": ,} ]      type:floor,wall,ceiling, 			
+
+"planeLineMatrix":
+
+"lineJunctionMatrix"     
 ```
 
-2. Get image channels
+由点Junction，线line，面plane组成，每个点记录交点也就是所有的角点，线只记录一个起始点和方向direction，由planeLineMatrix来记录line对应的两个端点Junction，面只有偏移量offset，type：（floor，wall，ceiling）这三个类型，normal法向量。offset是由法向量到原点的距离决定。
 
-```python
-fp.boundary
-fp.category
-fp.instance
-fp.inside
-```
 
-2. Get vector graphics information
 
-```python
-data = fp.to_dict()
-print(data.keys())
-```
+## 2.json解析器
 
-3. Align rooms with boundary, neighbors
+**S3Dparse.py**中主要实现从外墙和每个房间的角点，房间类型，以及窗户和门数据中提取出对应json文件的数据，返回一个result字典。
 
-```python
-from rplan.align import align_fp_gt
-boxes_aligned, order, room_boundaries = align_fp_gt(data['boundary'],data['boxes'],data['types'],data['edges'])
-data['boxes_aligned'] = boxes_aligned
-data['order'] = order
-data['room_boundaries'] = room_boundaries
-```
+**S3Dtest.py**主要是对RPLAN的原始点数据进行处理，从中心墙线获取房间角点，外墙角点。门窗数据
 
-4. Add doors and windows for a vector floorplan
 
-```python
-from rplan.decorate import get_dw
-doors,windows = get_dw(data)
-data['doors'] = doors
-data['windows'] = windows
-``` 
 
-5. Plot floorplan
 
-```python
-from rplan.plot import get_figure,get_axes
-from rplan.plot import plot_category,plot_boundary,plot_graph,plot_fp
-plot_category(fp.category) # raw image
-plot_boundary(data['boundary']) # vector boundary
-plot_graph(data['boundary'],data['boxes'],data['types'],data['edges']) # node graph
-plot_fp(data['boundary'], data['boxes_aligned'][order], data['types'][order]) # vector floorplan
-plot_fp(data['boundary'], data['boxes_aligned'][order], data['types'][order],data['doors'],data['windows']) # vector floorplan with doors and windows
-```
 
-6. Get the turning function for a boundary
+### **使用：**
 
-```python
-from rplan.measure import compute_tf
-from rplan.plot import plot_tf
+​	将**input_dir**替换为自己的rplan数据集路径
 
-x,y = compute_tf(data['boundary'])
-plot_tf(x,y)
-```
+​	将output_dir替换为输出路径
 
-7. Cluster turning functions: See `cluster_tf.py`. Linux system and FAISS are required.
+​	index_forma设置文件命名格式，05d是s3d的命名格式
 
-8. Retrieve based on the turning function
-
-``` python
-import numpy as np
-from rplan.measure import TFRetriever
-tf = np.load('output/tf_discrete.npy')
-tf_centroids = np.load('output/tf_centroids.npy')
-tf_clusters = np.load('output/tf_clusters.npy')
-retriever = TFRetriver(tf,tf_centroids,tf_clusters)
-top_20 = retriever.retrieve_cluster(data['boundary'],k=20,beam_search=True) # Knn search
-top_5 = retriever.retrieve_bf(data['boundary'],k=5) # argsort
-```
-
-## Acknowledgement
-- [RPLAN](http://staff.ustc.edu.cn/~fuxm/projects/DeepLayout/index.html)
-- [Graph2Plan](https://github.com/HanHan55/Graph2plan)
+​	maxfiles控制处理数量
