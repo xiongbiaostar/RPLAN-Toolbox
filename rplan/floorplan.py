@@ -7,6 +7,7 @@ from scipy import ndimage
 from shapely import geometry
 import numpy as np
 
+
 from .utils import collide2d,point_box_relation,door_room_relation
 
 class Floorplan():
@@ -30,7 +31,7 @@ class Floorplan():
         self.name = Path(self.path).stem
         self.image = io.imread(self.path)
         self.h,self.w,self.c = self.image.shape
-        
+
         self.front_door = None
         self.doors= {'door_y1': 0, 'door_x1': 0, 'door_y2': 0, 'door_x2': 0}
         self.exterior_boundary = None

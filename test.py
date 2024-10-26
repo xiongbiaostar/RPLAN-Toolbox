@@ -1,35 +1,74 @@
-import matplotlib.pyplot as plt
+# %%
+import pickle
+# 得到生成数据
+with open('result.pkl', 'rb') as f:
+    loaded_result = pickle.load(f)
 
-from rplan.floorplan import Floorplan
-from rplan.align import align_fp_gt
-from rplan.decorate import get_dw
-from rplan.measure import compute_tf
-from rplan.plot import get_figure,get_axes,plot_category,plot_boundary,plot_graph,plot_fp,plot_tf
 
-RPLAN_DIR = './data'
-file_path = f'{RPLAN_DIR}/0.png'
-fp = Floorplan(file_path)
-data = fp.to_dict()
 
-boxes_aligned, order, room_boundaries = align_fp_gt(data['boundary'],data['boxes'],data['types'],data['edges'])
-data['boxes_aligned'] = boxes_aligned
-data['order'] = order
-data['room_boundaries'] = room_boundaries
+# %%
+import pickle
+import numpy as np
+with open('error.pkl', 'rb') as f:
+    loaded_test = pickle.load(f)
 
-doors,windows = get_dw(data)
-data['doors'] = doors
-data['windows'] = windows
+# print(loaded_test['param'] * (loaded_test['ignore_mask']))
+test_boundary =  loaded_test['param'] * (loaded_test['ignore_mask'] == False)
+test_box =  loaded_test['param'] * (loaded_test['ignore_mask'])
 
-fig = get_figure([512,512])
-plot_boundary(data['boundary'],ax=get_axes(fig=fig,rect=[0,0.5,0.5,0.5]))
-ax = plot_category(fp.category,ax=get_axes(fig=fig,rect=[0.5,0.5,0.5,0.5]))
-plot_graph(data['boundary'],data['boxes'],data['types'],data['edges'],ax=ax)
-plot_fp(data['boundary'], data['boxes_aligned'][order], data['types'][order],ax=get_axes(fig=fig,rect=[0,0,0.5,0.5]))
-plot_fp(data['boundary'], data['boxes_aligned'][order], data['types'][order],data['doors'],data['windows'],ax=get_axes(fig=fig,rect=[0.5,0,0.5,0.5]))
-fig.canvas.draw()
-fig.canvas.print_figure('./output/plot.png')
+# %%
+# 画图处理
+box = []
+for i in range(test_box.shape[0]):
+    matrix = test_box[i]
+    _box_ = []
+    non_zero_rows = matrix[~np.all(matrix == 0, axis=1)]
+    for _ in non_zero_rows:
+        _box_.append(_.reshape(-1, 2))
+    box.append(_box_)
 
-x,y = compute_tf(data['boundary'])
-plot_tf(x,y)
-plt.savefig('./output/tf.png')
-plt.close()
+boundary = []
+for i in range(test_boundary.shape[0]):
+    matrix = test_boundary[i]
+    _box_ = []
+    non_zero_rows = matrix[~np.all(matrix == 0, axis=1)]
+    for _ in non_zero_rows:
+        _box_.append(_.reshape(-1, 2))
+    boundary.append(_box_)
+
+box_ = []
+for i in range(test_box.shape[0]):
+    matrix = loaded_result[i]
+    _box_ = []
+    non_zero_rows = matrix[~np.all(matrix == 0, axis=1)]
+    for _ in non_zero_rows:
+        _box_.append(_.reshape(-1, 2))
+    box_.append(_box_)
+
+
+# %%
+import pylab as plt
+# 画图
+for _ in range(1):
+    plt.figure(figsize=(10, 6))
+
+    plt.subplot(1, 2, 1)
+    for i in np.array(boundary[_]):
+        plt.plot(i.T[0], i.T[1], 'b')
+
+    for i in np.array(box[_]):
+        plt.plot(i.T[0], i.T[1], 'r')
+    plt.axis('equal')
+
+    plt.subplot(1, 2, 2)
+    for i in np.array(boundary[_]):
+        plt.plot(i.T[0], i.T[1], 'b')
+
+    for i in np.array(box_[_]):
+        plt.plot(i.T[0], i.T[1], 'r')
+
+    plt.axis('equal')
+    #plt.show()
+    plt.savefig(f'error/{_}.png')
+
+

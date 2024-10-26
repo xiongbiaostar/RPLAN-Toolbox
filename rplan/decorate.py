@@ -41,6 +41,7 @@ class DirectedLine():
     
     @property
     def length(self):return self.maxLevel-self.minLevel
+
     
     def is_contact(self,line): 
         minl = min(self.minLevel,line.minLevel)

@@ -10,11 +10,11 @@ solid = false;
 % pre-processing: 
 % move the edge relation w.r.t. living room to the end
 livingIdx = find(rType==0);
-idx = rEdge(:,1) == livingIdx-1 | rEdge(:,2) == livingIdx-1;
+% idx = rEdge(:,1) == livingIdx-1 | rEdge(:,2) == livingIdx-1;
 % a = rEdge(~idx, :);
 % b = rEdge(idx, :);
 % rEdge = [a; b];
-rEdge = rEdge(~idx, :);
+% rEdge = rEdge(~idx, :);
 entranceBox = get_entrance_space(boundary(1:2, 1:2), boundary(1,3), threshold);
 
 if drawResult

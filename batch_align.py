@@ -7,6 +7,8 @@ from rplan.decorate import get_dw
 from rplan.utils import get_edges,savepkl,savemat
 from multiprocessing import Pool,Manager
 
+#对一组房屋布局图像进行处理
+
 def func(file_path):
     fp = Floorplan(file_path)
     data = fp.to_dict(dtype=np.uint8)
