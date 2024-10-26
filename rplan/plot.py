@@ -78,6 +78,35 @@ def plot_boundary(boundary, wall_thickness=6,ax=None):
 
     return ax
 
+
+def plot_boundary_no_thickness(boundary, wall_thickness=0.1, ax=None):
+    if ax is None: ax = get_axes()
+
+    is_new = boundary[:, -1] == 1
+    poly_boundary = geometry.Polygon(boundary[~is_new, :2])
+    x, y = poly_boundary.exterior.xy
+    ax.fill(x, y, fc='none', ec='red', lw=wall_thickness, joinstyle='round')
+
+    door = boundary[:2, :2]
+    idx = np.argmin(np.sum(door, axis=-1), axis=0)
+    if idx == 1: door = door[[1, 0]]
+
+    ori = boundary[0, 2]
+    if ori % 2 == 0:
+        door = door + np.array([
+            [wall_thickness / 4, 0], [-wall_thickness / 4, 0]
+        ])
+    else:
+        door = door + np.array([
+            [0, wall_thickness / 4],
+            [0, -wall_thickness / 4]
+        ])
+    ax.plot(door[:, 0], door[:, 1], color=cmap[15], lw=wall_thickness + 1)
+
+    return ax
+
+
+
 def plot_graph(boundary, boxes, types, edges, wall_thickness=6,with_boundary=True,ax=None):
     if ax is None: ax = get_axes()
 
@@ -107,12 +136,12 @@ def plot_fp(boundary, boxes, types, doors=[], windows=[], wall_thickness=6, font
     is_new = boundary[:,-1]==1
     poly_boundary = geometry.Polygon(boundary[~is_new,:2])
     poly = dict()
-    
+
     for k in range(len(boxes)):
         poly_room = geometry.box(*boxes[k])
         poly[k] = poly_boundary.intersection(poly_room)
-        if poly[k].area==0: 
-            print(f'ploting empty box {k}!') 
+        if poly[k].area==0:
+            print(f'ploting empty box {k}!')
             continue
 
         if keep_box:
@@ -121,10 +150,10 @@ def plot_fp(boundary, boxes, types, doors=[], windows=[], wall_thickness=6, font
             ax.fill(x,y,fc=cmap[types[k]],ec=cmap[16],alpha=alpha,lw=wall_thickness,joinstyle='round')
         else:
             if poly[k].geom_type!='Polygon':
-                for p in poly[k]:
-                    if p.geom_type!='Polygon': continue
-                    x,y = p.exterior.xy
-                    ax.fill(x,y,fc=cmap[types[k]],ec=cmap[16],alpha=alpha,lw=wall_thickness,joinstyle='round')
+                for geom in poly[k].geoms:
+                    if geom.geom_type != 'Polygon': continue
+                    x, y = geom.exterior.xy
+                    ax.fill(x, y, fc=cmap[types[k]], ec=cmap[16], alpha=alpha, lw=wall_thickness, joinstyle='round')
             else:
                 x,y = poly[k].exterior.xy
                 ax.fill(x,y,fc=cmap[types[k]],ec=cmap[16],alpha=alpha,lw=wall_thickness,joinstyle='round')

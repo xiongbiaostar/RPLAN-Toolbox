@@ -29,42 +29,95 @@ def is_point_on_line_segment(p, p1, p2):
         return True
 
     return False
+def cross_product(v1, v2):
+    # 计算两个向量的叉积
+    return v1[0] * v2[1] - v1[1] * v2[0]
+
 def get_doors_room_relation(doors, rooms):
     """
-    得到门和房间的连接关系，判断门的中心点是否在线上，保存对应的room_boundaries中的位置索引
+    得到门和房间的连接关系，判断门和墙是否平行并且是否存在点在墙线段上，保存对应的room_boundaries中的位置索引
     """
     doors_edge = []
     for door in doors:
-        p = [door[1] + door[3]/2, door[2] + door[4]/2]
+        p1 = [door[1], door[2]]
+        p2 = [door[1] + door[3], door[2] + door[4]]
         edge = []
+
         for i in range(len(rooms)):
             room = rooms[i]
             for j in range(len(room)):
-                if is_point_on_line_segment(p, room[j], room[(j + 1) % len(room)]):
-                    edge.append(i)
-                    edge.append(j)
+                    start_point = room[j]
+                    end_point = room[(j + 1) % len(room)]
+                    if p1[0] == p2[0] == start_point[0] == end_point[0]:
+                        y1_min, y1_max = min(p1[1], p2[1]), max(p1[1], p2[1])
+                        y2_min, y2_max = min(start_point[1], end_point[1]), max(start_point[1], end_point[1])
+                        if max(y1_min, y2_min) < min(y1_max, y2_max):
+                            edge.append(i)
+                            edge.append(j)
+
+                    if p1[1] == p2[1] == start_point[1] == end_point[1]:
+                        v1 = [p2[0] - p1[0], p2[1] - p1[1]]
+                        v2 = [end_point[0] - start_point[0], end_point[1] - start_point[1]]
+                        if cross_product(v1, v2) == 0:
+                            x1_min, x1_max = min(p1[0], p2[0]), max(p1[0], p2[0])
+                            x2_min, x2_max = min(start_point[0], end_point[0]), max(start_point[0], end_point[0])
+                            if max(x1_min, x2_min) < min(x1_max, x2_max):
+                                edge.append(i)
+                                edge.append(j)
         doors_edge.append(edge)
     return doors_edge
 
 def get_windows_room_relation(windows, rooms, outwall):
     """
-    得到窗户和房间，外墙的连接关系，判断窗户的中心点是否在线上，保存对应的room_boundaries，outwalls中的位置索引
+    得到窗户和房间，外墙的连接关系，判断窗户和墙是否平行并且是否存在点在墙线段上，保存对应的room_boundaries，outwalls中的位置索引
     """
     windows_edge = []
     for window in windows:
-        p = [window[1] + window[3]/2, window[2] + window[4]/2]
+        p1 = [window[1],  window[2]]
+        p2 = [window[1] + window[3], window[2] + window[4]]
         edge = []
+        v1 = [p2[0] - p1[0], p2[1] - p1[1]]
         for i in range(len(rooms)):
             room = rooms[i]
             for j in range(len(room)):
-                if is_point_on_line_segment(p, room[j], room[(j + 1) % len(room)]):
-                    edge.append(i)
-                    edge.append(j)
-                    break
+                start_point = room[j]
+                end_point = room[(j + 1) % len(room)]
+                if p1[0] == p2[0] == start_point[0] == end_point[0]:
+                    y1_min, y1_max = min(p1[1], p2[1]), max(p1[1], p2[1])
+                    y2_min, y2_max = min(start_point[1], end_point[1]), max(start_point[1], end_point[1])
+                    if max(y1_min, y2_min) < min(y1_max, y2_max):
+                        edge.append(i)
+                        edge.append(j)
+                        break
+                if p1[1] == p2[1] == start_point[1] == end_point[1]:
+                    v1 = [p2[0] - p1[0], p2[1] - p1[1]]
+                    v2 = [end_point[0] - start_point[0], end_point[1] - start_point[1]]
+                    if cross_product(v1, v2) == 0:
+                        x1_min, x1_max = min(p1[0], p2[0]), max(p1[0], p2[0])
+                        x2_min, x2_max = min(start_point[0], end_point[0]), max(start_point[0], end_point[0])
+                        if max(x1_min, x2_min) < min(x1_max, x2_max):
+                            edge.append(i)
+                            edge.append(j)
+                            break
+
         for k in range(len(outwall)):
-            if is_point_on_line_segment(p, outwall[k], outwall[(k + 1) % len(outwall)]):
-                edge.append(k)
-                break
+            start_point = outwall[k]
+            end_point = outwall[(k + 1) % len(outwall)]
+            if p1[0] == p2[0] == start_point[0] == end_point[0]:
+                y1_min, y1_max = min(p1[1], p2[1]), max(p1[1], p2[1])
+                y2_min, y2_max = min(start_point[1], end_point[1]), max(start_point[1], end_point[1])
+                if max(y1_min, y2_min) < min(y1_max, y2_max):
+                    edge.append(k)
+                    break
+            if p1[1] == p2[1] == start_point[1] == end_point[1]:
+                v1 = [p2[0] - p1[0], p2[1] - p1[1]]
+                v2 = [end_point[0] - start_point[0], end_point[1] - start_point[1]]
+                if cross_product(v1, v2) == 0:
+                    x1_min, x1_max = min(p1[0], p2[0]), max(p1[0], p2[0])
+                    x2_min, x2_max = min(start_point[0], end_point[0]), max(start_point[0], end_point[0])
+                    if max(x1_min, x2_min) < min(x1_max, x2_max):
+                        edge.append(k)
+                        break
         windows_edge.append(edge)
     return windows_edge
 
@@ -75,33 +128,72 @@ def plot_door(doors, room_boundaries, inner_wall, thickness=6):
     doors_points = []
     doors_edges = get_doors_room_relation(doors, room_boundaries)
     for index, edge in enumerate(doors_edges):
+        if len(edge) != 4:
+            continue
         door = doors[index]
         start_point = door[1:3]
         end_point = door[1:3] + door[3:5]
 
         if door[3] < door[4]:
-            if door[4] > 0:
-                start_point[1] = start_point[1] + thickness / 2
+            if start_point[1] > end_point[1]:
+                start_point[1] = start_point[1] - 0.1
+                end_point[1] = end_point[1] + 0.1
             else:
-                start_point[1] = start_point[1] - thickness / 2
+                start_point[1] = start_point[1] + 0.1
+                end_point[1] = end_point[1] - 0.1
+            x1_start = start_point[1]
+            x1_end = end_point[1]
+            x2_start = inner_wall[edge[0]][edge[1]][1]
+            x2_end = inner_wall[edge[0]][(edge[1] + 1) % len(inner_wall[edge[0]])][1]
+            x3_start = inner_wall[edge[2]][edge[3]][1]
+            x3_end = inner_wall[edge[2]][(edge[3] + 1) % len(inner_wall[edge[2]])][1]
+
             start_inner = inner_wall[edge[0]][edge[1]][0]
             start_outer = inner_wall[edge[2]][edge[3]][0]
-            doors_points.append([[start_inner, start_point[1]],
-                                  [start_inner, end_point[1]],
-                                  [start_outer, end_point[1]],
-                                  [start_outer, start_point[1]]])
+
+            x1_start, x1_end = (min(x1_start, x1_end), max(x1_start, x1_end))
+            x2_start, x2_end = (min(x2_start, x2_end), max(x2_start, x2_end))
+            x3_start, x3_end = (min(x3_start, x3_end), max(x3_start, x3_end))
+
+            # 计算交集的左边界和右边界
+            left_boundary = max(x1_start, x2_start, x3_start)
+            right_boundary = min(x1_end, x2_end, x3_end)
+
+
+            doors_points.append([[start_inner, left_boundary],
+                                  [start_inner, right_boundary],
+                                  [start_outer, right_boundary],
+                                  [start_outer, left_boundary]])
 
         else:
-            if door[3] > 0:
-                start_point[0] = start_point[0] + thickness / 2
+            if start_point[0] > end_point[0]:
+                start_point[0] = start_point[0] - 0.1
+                end_point[0] = end_point[0] + 0.1
             else:
-                start_point[0] = start_point[0] - thickness / 2
+                start_point[0] = start_point[0] + 0.1
+                end_point[0] = end_point[0] - 0.1
+            x1_start = start_point[0]
+            x1_end = end_point[0]
+            x2_start = inner_wall[edge[0]][edge[1]][0]
+            x2_end = inner_wall[edge[0]][(edge[1] + 1) % len(inner_wall[edge[0]])][0]
+            x3_start = inner_wall[edge[2]][edge[3]][0]
+            x3_end = inner_wall[edge[2]][(edge[3] + 1) % len(inner_wall[edge[2]])][0]
+
             start_inner = inner_wall[edge[0]][edge[1]][1]
             start_outer = inner_wall[edge[2]][edge[3]][1]
-            doors_points.append([[start_point[0], start_inner],
-                                 [end_point[0], start_inner],
-                                 [end_point[0], start_outer],
-                                 [start_point[0], start_outer]])
+
+            x1_start, x1_end = (min(x1_start, x1_end), max(x1_start, x1_end))
+            x2_start, x2_end = (min(x2_start, x2_end), max(x2_start, x2_end))
+            x3_start, x3_end = (min(x3_start, x3_end), max(x3_start, x3_end))
+
+            # 计算交集的左边界和右边界
+            left_boundary = max(x1_start, x2_start, x3_start)
+            right_boundary = min(x1_end, x2_end, x3_end)
+
+            doors_points.append([[left_boundary, start_inner],
+                                 [right_boundary, start_inner],
+                                 [right_boundary, start_outer],
+                                 [left_boundary, start_outer]])
     return doors_points
 
 def plot_window(doors, room_boundaries, outwalls, inner_wall, outer_wall, thickness=6):
@@ -111,33 +203,71 @@ def plot_window(doors, room_boundaries, outwalls, inner_wall, outer_wall, thickn
     doors_points = []
     doors_edges = get_windows_room_relation(doors, room_boundaries, outwalls)
     for index, edge in enumerate(doors_edges):
+        if len(edge) != 3:
+            continue
         door = doors[index]
         start_point = door[1:3]
         end_point = door[1:3] + door[3:5]
 
         if door[3] < door[4]:
-            if door[4] > 0:
-                start_point[1] = start_point[1] + thickness / 2
+            if start_point[1] > end_point[1]:
+                start_point[1] = start_point[1] - 0.1
+                end_point[1] = end_point[1] + 0.1
             else:
-                start_point[1] = start_point[1] - thickness / 2
+                start_point[1] = start_point[1] + 0.1
+                end_point[1] = end_point[1] - 0.1
+            x1_start = start_point[1]
+            x1_end = end_point[1]
+            x2_start = inner_wall[edge[0]][edge[1]][1]
+            x2_end = inner_wall[edge[0]][(edge[1] + 1) % len(inner_wall[edge[0]])][1]
+            x3_start = outer_wall[edge[2]][1]
+            x3_end = outer_wall[(edge[2] + 1) % len(outer_wall)][1]
+
             start_inner = inner_wall[edge[0]][edge[1]][0]
             start_outer = outer_wall[edge[2]][0]
-            doors_points.append([[start_inner, start_point[1]],
-                                  [start_inner, end_point[1]],
-                                  [start_outer, end_point[1]],
-                                  [start_outer, start_point[1]]])
+
+            x1_start, x1_end = (min(x1_start, x1_end), max(x1_start, x1_end))
+            x2_start, x2_end = (min(x2_start, x2_end), max(x2_start, x2_end))
+            x3_start, x3_end = (min(x3_start, x3_end), max(x3_start, x3_end))
+
+            # 计算交集的左边界和右边界
+            left_boundary = max(x1_start, x2_start, x3_start)
+            right_boundary = min(x1_end, x2_end, x3_end)
+
+            doors_points.append([[start_inner, left_boundary],
+                                  [start_inner, right_boundary],
+                                  [start_outer, right_boundary],
+                                  [start_outer, left_boundary]])
 
         else:
-            if door[3] > 0:
-                start_point[0] = start_point[0] + thickness / 2
+            if start_point[0] > end_point[0]:
+                start_point[0] = start_point[0] - 0.1
+                end_point[0] = end_point[0] + 0.1
             else:
-                start_point[0] = start_point[0] - thickness / 2
+                start_point[0] = start_point[0] + 0.1
+                end_point[0] = end_point[0] - 0.1
+            x1_start = start_point[0]
+            x1_end = end_point[0]
+            x2_start = inner_wall[edge[0]][edge[1]][0]
+            x2_end = inner_wall[edge[0]][(edge[1] + 1) % len(inner_wall[edge[0]])][0]
+            x3_start = outer_wall[edge[2]][0]
+            x3_end = outer_wall[(edge[2] + 1) % len(outer_wall)][0]
+
             start_inner = inner_wall[edge[0]][edge[1]][1]
             start_outer = outer_wall[edge[2]][1]
-            doors_points.append([[start_point[0], start_inner],
-                                 [end_point[0], start_inner],
-                                 [end_point[0], start_outer],
-                                 [start_point[0], start_outer]])
+
+            x1_start, x1_end = (min(x1_start, x1_end), max(x1_start, x1_end))
+            x2_start, x2_end = (min(x2_start, x2_end), max(x2_start, x2_end))
+            x3_start, x3_end = (min(x3_start, x3_end), max(x3_start, x3_end))
+
+            # 计算交集的左边界和右边界
+            left_boundary = max(x1_start, x2_start, x3_start)
+            right_boundary = min(x1_end, x2_end, x3_end)
+
+            doors_points.append([[left_boundary, start_inner],
+                                 [right_boundary, start_inner],
+                                 [right_boundary, start_outer],
+                                 [left_boundary, start_outer]])
     return doors_points
 
 def norm(p1, p2):
@@ -153,6 +283,32 @@ def norm(p1, p2):
     norm_dy = -dx / length
 
     return norm_dx, norm_dy
+
+
+def remove_adjacent_duplicates(points, outwalls):
+    """
+    移除列表中相邻的重复点。
+
+    :param points: 一个列表，包含多个长度为2的子列表，代表点的坐标。
+    :return: 一个新的列表，其中移除了所有相邻的重复点。
+    """
+    # 初始化一个空列表来存储去重后的点
+    unique_points = []
+    unique_outwalls = []
+
+    # 遍历输入列表，直到倒数第二个点
+    for i in range(len(points) - 1):
+        # 如果当前点与下一个点不同，则将当前点添加到结果列表中
+        if points[i] != points[i + 1]:
+            unique_points.append(points[i])
+            unique_outwalls.append(outwalls[i])
+
+    # 检查最后一个点是否与第一个点不同，如果不同，则添加到结果列表中
+    if points[-1] != points[0] or len(points) == 1:
+        unique_points.append(points[-1])
+        unique_outwalls.append(outwalls[-1])
+
+    return unique_points, unique_outwalls
 
 def calculate_inner_contours(room_boundaries, thickness=6, min_gap = 0.5):
     """
@@ -199,8 +355,14 @@ def calculate_inner_contours(room_boundaries, thickness=6, min_gap = 0.5):
                 j += 2
             else:
                 j += 1
-
-    return inner_contours
+    updated_inner_contours = []
+    updated_room_boundaries = []
+    for i in range(len(inner_contours)):
+        if inner_contours[i] != [] and (len(inner_contours[i]) >= 4):
+            dedup_inner_contours, dedup_room_boundaries = remove_adjacent_duplicates(inner_contours[i], room_boundaries[i])
+            updated_inner_contours.append(dedup_inner_contours)
+            updated_room_boundaries.append(dedup_room_boundaries)
+    return updated_inner_contours, updated_room_boundaries
 
 def calculate_outwall_contours(outwalls, thickness=6, min_gap=0.5):
     """
@@ -260,7 +422,11 @@ def calculate_outwall_contours(outwalls, thickness=6, min_gap=0.5):
             outwall_contours[(i + 2) % n] = [outwall_contours[(i + 2) % n][0] + norm_dx_p23 * adjusted_thickness,
                                              outwall_contours[(i + 2) % n][1] + norm_dy_p23 * adjusted_thickness]
             skip_next = True
-    return outwall_contours
+
+    dedup_outwall_contours, updated_outwalls = remove_adjacent_duplicates(outwall_contours, outwalls)
+    return dedup_outwall_contours, updated_outwalls
+
+
 
 def get_outwall_point(processed_boundary, thickness=6):
     """
@@ -368,8 +534,32 @@ def convert_real(point, origin, scale = 50):
 
     return real_point
 
+type_order = [1,2,3,4,1,2,2,2,2,5,1,6,1,10,7,8,9,10]
+
+def point_inside(point, box):
+    # 检查点是否在边界框内
+    x_min, x_max = min(box[0], box[2]), max(box[0], box[2])
+    y_min, y_max = min(box[1], box[3]), max(box[1], box[3])
+    return x_min <= int(point[0]) <= x_max and y_min <= int(point[1]) <= y_max
+
+def room_inside(room, box):
+    # 检查房间的所有角点是否都在边界框内
+    return all(point_inside(point, box) for point in room)
+def assign_types(room_boundaries, types_bboxes, types):
+    room_types = np.full(len(room_boundaries), 16, dtype=np.int32)
+    for i, type_bbox in enumerate(types_bboxes):
+        if type_order[types[i]] > 6:
+            continue
+        for j, room in enumerate(room_boundaries):
+            if room_inside(room, type_bbox):
+                room_types[j] = type_order[types[i]]
+    return room_types
+
+
 def process_file(args):
     file_name, input_dir, output_dir, index_format = args
+    # if file_name != '391.png':
+    #     return
     try:
         file_path = os.path.join(input_dir, file_name)
         fp = Floorplan(file_path)
@@ -397,16 +587,18 @@ def process_file(args):
             start = (min(outwalls[0][0], outwalls[1][0]), outwalls[0][1])
             end = (max(outwalls[0][0], outwalls[1][0]), outwalls[0][1])
             dx, dy = end[0] - start[0], 0
-
         new_windows = np.vstack((windows, [windows[len(windows)-1][0] + 1, start[0], start[1], dx, dy, 0]))
+
 
         room_wall = get_room_wall_point(room_boundaries)
 
-        inner_wall = calculate_inner_contours(room_wall)
-        outer_boundaries = calculate_outwall_contours(outwalls)
+        inner_wall, update_room_wall = calculate_inner_contours(room_wall)
+        outer_boundaries, updated_outwalls= calculate_outwall_contours(outwalls)
 
-        update_doors = plot_door(doors, room_wall, inner_wall)
-        update_windows = plot_window(new_windows, room_wall, outwalls, inner_wall, outer_boundaries)
+        room_type = assign_types(inner_wall, data['boxes_aligned'][order], data['types'][order])
+
+        update_doors = plot_door(doors, update_room_wall, inner_wall)
+        update_windows = plot_window(new_windows, update_room_wall, updated_outwalls, inner_wall, outer_boundaries)
 
 
         bboxes = np.array(data['boxes'])
@@ -453,7 +645,7 @@ def process_file(args):
         scene_dir = os.path.join(output_dir, f'scene_{index_format.format(int(base_name))}')
         os.makedirs(scene_dir, exist_ok=True)
         output_file_path = os.path.join(scene_dir, 'annotation_3d.json')
-        parser = S3DFeatureParser(data['types'], data['boxes'], real_inner_wall, real_outer_boundaries, real_update_doors, real_update_windows)
+        parser = S3DFeatureParser(room_type, data['boxes'], real_inner_wall, real_outer_boundaries, real_update_doors, real_update_windows)
         result = parser.parser()
 
         with open(output_file_path, 'w') as fp:
@@ -462,7 +654,7 @@ def process_file(args):
         print(f"Error processing file {file_name}: {e}")
 
 
-def main(input_dir, output_dir, index_format, maxfiles=-1):
+def main(input_dir, output_dir, index_format, maxfiles):
     os.makedirs(output_dir, exist_ok=True)
     files = os.listdir(input_dir)
     files = files[:maxfiles]
@@ -474,7 +666,7 @@ def main(input_dir, output_dir, index_format, maxfiles=-1):
 
 if __name__ == "__main__":
     input_dir = 'dataset/floorplan_dataset'
-    output_dir = 'dataset/structured3d'
+    output_dir = 'dataset/structured3d_test'
     index_format = "{:05d}"
     maxfiles = -1
     main(input_dir, output_dir, index_format, maxfiles)

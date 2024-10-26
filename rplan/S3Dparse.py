@@ -1,6 +1,6 @@
 import numpy as np
 
-ROOM_CLASS = {1: "living room", 2 : "kitchen", 3 : "bedroom", 4 : "bathroom", 5 : "balcony",  7 : "dining room", 8 : "study",
+ROOM_CLASS = {1: "living room", 2 : "bedroom", 3 : "kitchen", 4 : "bathroom", 5 : "balcony", 6: "corridor", 7 : "dining room", 8 : "study",
               10 : "store room",  16 : "undefined"}
 
 #6 : "entrance", 15 : "front door",
@@ -90,10 +90,10 @@ class S3DFeatureParser(object):
             n = len(wall)
             for i in range(n):
                 point = wall[i]
-                index_junctions, junctinos = self._add_junction_bottom_top(point, index_junctions, junctions)
+                index_junctions, junctions = self._add_junction_bottom_top(point, index_junctions, junctions)
 
         for outwall in self.outwalls:
-            index_junctions, junctinos = self._add_junction_bottom_top(outwall, index_junctions, junctions)
+            index_junctions, junctions = self._add_junction_bottom_top(outwall, index_junctions, junctions)
 
         for door in self.door_point:
             n = len(door)
@@ -179,26 +179,26 @@ class S3DFeatureParser(object):
             for i in range(n):
                 start_point = wall[i]
                 end_point = wall[(i + 1) % n]
-                index_line, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
+                index_lines, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
 
         for i in range(n_outwalls):
             start_point = outwalls[i]
             end_point = outwalls[(i + 1) % n_outwalls]
-            index_line, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
+            index_lines, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
 
         for door in self.door_point:
             n = len(door)
             for i in range(n):
                 start_point = door[i]
                 end_point = door[(i + 1) % n]
-                index_line, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
+                index_lines, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
 
         for window in self.window_point:
             n = len(window)
             for i in range(n):
                 start_point = window[i]
                 end_point = window[(i + 1) % n]
-                index_line, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
+                index_lines, lines = self._add_lines_bottom_top(start_point, end_point, index_lines, lines, junctions)
 
         for junction in self.junctions:
 
