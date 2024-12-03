@@ -1,6 +1,28 @@
 import pickle
 import numpy as np
 import os
+# loop数据  room_boundaries数据
+# profile数据  data[boxes]数据
+
+# 数据划分：
+# 	loop下分为train/val/test
+# 	profile下分为train/val/test
+# 	两部分数据分开
+
+# loop数据：
+# 	[{'param'：[[x0,y0], [x1,y1],....], 'uid':'00001_0' },
+# 	 {'param'：[[x0,y0], [x1,y1],....], 'uid':'00001_1' },
+# 	 .....]
+
+
+
+# profile数据:
+# 	[{'profile':[[x0,y0,x1,y1],[x0,y0,x1,y1]], 'uid':'00001'},
+# 	 {'profile':[[x0,y0,x1,y1],[x0,y0,x1,y1], ....], 'uid':'00002'},
+# 	 ......]
+
+# profile的uid按照场景id给出，profile数据就是每个房间的包围盒。loop的uid对应profile，每个房间给loop：00001_0,00001_1,这里loop的顺序和profile不需要对应。但每个都要给出唯一的uid。
+	
 def boundary_rotation(data, theta):
     points_x, points_y = data.T
     x = points_x * np.cos(theta) - points_y * np.sin(theta)
