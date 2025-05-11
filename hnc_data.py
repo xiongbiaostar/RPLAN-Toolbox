@@ -6,11 +6,34 @@ import os
 
 from tqdm import tqdm
 
-def boundary_rotation(data, theta):
-    points_x, points_y = data.T
+def boundary_rotation(data, boundary, theta):
+    # 计算边界框的最小和最大值
+    points_x, points_y = boundary.T
+
+    # 分别求 x 和 y 的最小值和最大值
+    min_x = np.min(points_x)
+    max_x = np.max(points_x)
+    min_y = np.min(points_y)
+    max_y = np.max(points_y)
+
+    # 计算边界框的中心点
+    center_x = (min_x + max_x) / 2
+    center_y = (min_y + max_y) / 2
+    center = np.array([center_x, center_y])
+
+    # 平移点集到原点
+    translated_data = data - center
+
+    # 旋转点集
+    points_x, points_y = translated_data.T
     x = points_x * np.cos(theta) - points_y * np.sin(theta)
     y = points_x * np.sin(theta) + points_y * np.cos(theta)
-    return np.stack([x, y]).T
+    rotated_data = np.stack([x, y]).T
+
+    # 平移回原来的位置
+    rotated_data += center
+
+    return rotated_data
 
 def normalize(data, boundary, type='boundary'):
     max_data = boundary.max()
@@ -24,8 +47,9 @@ def normalize(data, boundary, type='boundary'):
     data = (data - min_data) / (max_data - min_data)
 
     quantized_data = data * 63
+    quantized_data = np.array(quantized_data, dtype=np.float32)
     quantized_data = np.clip(quantized_data, a_min=0, a_max=63)  # 限制值的范围
-
+    quantized_data = np.round(np.array(quantized_data))
     # 转换为整数
     quantized_data = quantized_data.astype('int32')
     return quantized_data
@@ -138,58 +162,76 @@ def gen_data(ret, if_rotation=True):
             types = ret[key]['type']
             room_type = assign_types(room_boundaries, boxes_aligned, types)
 
-            boundary_non_norm = boundary_rotation(boundary, theta)
+            boundary_non_norm = boundary_rotation(boundary, boundary, theta)
             boundary_param = normalize(boundary_non_norm, boundary_non_norm, 'boundary')
-            if (boundary_param[0] == boundary_param[1]).all():
+            #FrontDoor, FrontDoor_bbox = create_rectangle_from_two_points(boundary_param[0], boundary_param[1])
+            #FrontDoor_type = np.insert(FrontDoor, 0, np.array([[0, 0]]), axis=0)
+            #boundary_data.append({'param': FrontDoor_type.astype(np.int32), 'uid': f'{i * 4 + theta_id:06}_0'})
+
+            #是否存在相同的点
+            unique_points, counts = np.unique(boundary_param, axis=0, return_counts=True)
+            duplicates = unique_points[counts > 1]
+
+            if duplicates.size > 0:
+                #print(boundary_param)
                 continue
-            FrontDoor, FrontDoor_bbox = create_rectangle_from_two_points(boundary_param[0], boundary_param[1])
-            FrontDoor_type = np.insert(FrontDoor, 0, np.array([[0, 0]]), axis=0)
-            boundary_data.append({'param': FrontDoor_type.astype(np.int32), 'uid': f'{i * 4 + theta_id:06}_0'})
+
             boundary_param_type = np.insert(boundary_param, 0, np.array([[1, 1]]), axis=0)
             boundary_data.append({'param': boundary_param_type.astype(np.int32), 'uid': f'{i * 4 + theta_id:06}_1'})
             index = 2
+            duplicates_flag = False
+            data_boxes = []
+
+            points_x, points_y = boundary_param.T
+
+            # 分别求 x 和 y 的最小值和最大值
+            min_x = np.min(points_x)
+            max_x = np.max(points_x)
+            min_y = np.min(points_y)
+            max_y = np.max(points_y)
+
+            box = np.stack([min_x, min_y, max_x, max_y]).T
+            box_type = np.insert(box, 0,  1)
+            data_boxes.append(box_type.astype(np.int32))
+
             for j, room_boundary in enumerate(room_boundaries):
                 room = np.array(room_boundary, dtype=np.float32)
                 if np.isnan(room).any() or len(room_boundary) < 4:
                     continue
-                room_boundary = boundary_rotation(room_boundary, theta)
+                room_boundary = boundary_rotation(room_boundary, boundary, theta)
                 room_boundary = normalize(room_boundary, boundary_non_norm, 'boundary')
+
+                unique_points, counts = np.unique(room_boundary, axis=0, return_counts=True)
+                duplicates = unique_points[counts > 1]
+                if duplicates.size > 0:
+                    duplicates_flag = True
+                    #print(room_boundary)
+                    continue
+
+                points_x, points_y = room_boundary.T
+
+                # 分别求 x 和 y 的最小值和最大值
+                min_x = np.min(points_x)
+                max_x = np.max(points_x)
+                min_y = np.min(points_y)
+                max_y = np.max(points_y)
+
+                box = np.stack([min_x,min_y,max_x,max_y]).T
+                box_type = np.insert(box, 0, room_type[j] + 1)
+                data_boxes.append(box_type.astype(np.int32))
+
                 room_boundary_type = np.insert(room_boundary, 0, np.array([[room_type[j]+1, room_type[j]+1]]), axis=0)
                 boundary_data.append({'param': room_boundary_type.astype(np.int32), 'uid': f'{i * 4 + theta_id:06}_{index}'})
                 index += 1
 
+            if duplicates_flag:
+                continue
 
-            # 处理profile数据
-
-            data_boxes = []
-            FrontDoor_bbox = np.insert(FrontDoor_bbox, 0, 0)
-            data_boxes.append(FrontDoor_bbox.astype(np.int32))
-            xmin, ymin = boundary.min(axis=0)
-            xmax, ymax = boundary.max(axis=0)
-            boundary_non_norm = profile_rotation(np.array([xmin, ymin, xmax, ymax]), theta)
-            boundary_profile = normalize(boundary_non_norm, boundary_non_norm, 'profile')
-            boundary_profile_type = np.insert(boundary_profile, 0, 1)
-            data_boxes.append(boundary_profile_type.astype(np.int32))
-
-            for k, box in enumerate(ret[key]['box']):
-                if len(box) != 0:
-                    box = profile_rotation(box, theta)
-                    box = normalize(box, boundary_non_norm, 'profile')
-                    box_type = np.insert(box, 0, room_type[k]+1)
-                    data_boxes.append(box_type.astype(np.int32))
             profile_data.append({'profile': data_boxes, 'uid': f'{i * 4 + theta_id:06}'})
 
+
+
     return boundary_data, profile_data
-
-def profile_rotation(data, theta):
-    xmin, ymin, xmax, ymax = data.T
-
-    return np.stack([
-        xmin * np.cos(theta) - ymin * np.sin(theta),
-        xmin * np.sin(theta) + ymin * np.cos(theta),
-        xmax * np.cos(theta) - ymax * np.sin(theta),
-        xmax * np.sin(theta) + ymax * np.cos(theta),
-    ]).T
 
 
 def gen_profile_data(ret, if_rotation=True):
