@@ -4,6 +4,7 @@ import warnings
 import numpy as np
 import os
 
+from shapely import Polygon
 from tqdm import tqdm
 
 def boundary_rotation(data, boundary, theta):
@@ -111,36 +112,12 @@ def assign_types(room_boundaries, types_bboxes, types):
                 room_types[j] = type_order[types[i]]
     return room_types
 
-
-def create_rectangle_from_two_points(point1, point2):
-    point1 = np.array(point1)
-    point2 = np.array(point2)
-
-    direction_vector = point2 - point1
-
-    perpendicular_vector = np.array([direction_vector[1], direction_vector[0]])
-
-    perpendicular_vector = perpendicular_vector / np.linalg.norm(perpendicular_vector)
-
-
-
-    vertex1 = point1 + perpendicular_vector
-    vertex2 = point1
-    vertex3 = point2
-    vertex4 = point2 + perpendicular_vector
-
-    points = np.array([vertex1, vertex2, vertex3, vertex4])
-    x_min, y_min = points.min(axis=0)
-    x_max, y_max = points.max(axis=0)
-    bbox = np.array([x_min, y_min, x_max-x_min, y_max-y_min])
-
-    return points, bbox
-
-
 def gen_data(ret, if_rotation=True):
     boundary_data = []
     profile_data = []
-    theta_list = [0, np.pi, np.pi / 2, -np.pi / 2] if if_rotation else [0]
+    area_ratios = []
+    # theta_list = [0, np.pi, np.pi / 2, -np.pi / 2] if if_rotation else [0]
+    theta_list = [0] if if_rotation else [0]
 
     # 使用 tqdm 来显示进度条
     for i, key in enumerate(tqdm(list(ret.keys()), desc='Generating data')):
@@ -160,7 +137,8 @@ def gen_data(ret, if_rotation=True):
 
             boxes_aligned = ret[key]['box']
             types = ret[key]['type']
-            room_type = assign_types(room_boundaries, boxes_aligned, types)
+            #room_type = assign_types(room_boundaries, boxes_aligned, types)
+            room_type = ret[key]['type']
 
             boundary_non_norm = boundary_rotation(boundary, boundary, theta)
             boundary_param = normalize(boundary_non_norm, boundary_non_norm, 'boundary')
@@ -177,8 +155,7 @@ def gen_data(ret, if_rotation=True):
                 continue
 
             boundary_param_type = np.insert(boundary_param, 0, np.array([[1, 1]]), axis=0)
-            boundary_data.append({'param': boundary_param_type.astype(np.int32), 'uid': f'{i * 4 + theta_id:06}_1'})
-            index = 2
+            boundary_data.append({'param': boundary_param_type.astype(np.int32), 'uid': f'{i + theta_id:06}_0'})
             duplicates_flag = False
             data_boxes = []
 
@@ -194,12 +171,20 @@ def gen_data(ret, if_rotation=True):
             box_type = np.insert(box, 0,  1)
             data_boxes.append(box_type.astype(np.int32))
 
+            temp_room_boundary = []
+            temp_profile = []
+
             for j, room_boundary in enumerate(room_boundaries):
                 room = np.array(room_boundary, dtype=np.float32)
                 if np.isnan(room).any() or len(room_boundary) < 4:
                     continue
                 room_boundary = boundary_rotation(room_boundary, boundary, theta)
+
+                area_raw  = Polygon(room_boundary).area
                 room_boundary = normalize(room_boundary, boundary_non_norm, 'boundary')
+                area_norm = Polygon(room_boundary).area
+                if area_norm > 0:
+                    area_ratios.append(area_raw / area_norm)
 
                 unique_points, counts = np.unique(room_boundary, axis=0, return_counts=True)
                 duplicates = unique_points[counts > 1]
@@ -207,9 +192,7 @@ def gen_data(ret, if_rotation=True):
                     duplicates_flag = True
                     #print(room_boundary)
                     continue
-
                 points_x, points_y = room_boundary.T
-
                 # 分别求 x 和 y 的最小值和最大值
                 min_x = np.min(points_x)
                 max_x = np.max(points_x)
@@ -219,93 +202,36 @@ def gen_data(ret, if_rotation=True):
                 box = np.stack([min_x,min_y,max_x,max_y]).T
                 box_type = np.insert(box, 0, room_type[j] + 1)
                 data_boxes.append(box_type.astype(np.int32))
+                temp_profile.append(box_type.astype(np.int32))
 
                 room_boundary_type = np.insert(room_boundary, 0, np.array([[room_type[j]+1, room_type[j]+1]]), axis=0)
-                boundary_data.append({'param': room_boundary_type.astype(np.int32), 'uid': f'{i * 4 + theta_id:06}_{index}'})
-                index += 1
+                temp_room_boundary.append(room_boundary_type.astype(np.int32))
 
             if duplicates_flag:
                 continue
 
-            profile_data.append({'profile': data_boxes, 'uid': f'{i * 4 + theta_id:06}'})
+            def extract_sort_key(profile):
+                # 提取 profile 中的 min_x 和 min_y
+                type, min_x, min_y, max_x, max_y = profile
+                return min_x, min_y
 
+            sorted_indices = sorted(range(len(temp_profile)), key=lambda i: extract_sort_key(temp_profile[i]))
 
+            # 根据排序后的索引调整 temp_profile 和 temp_room_boundary 的顺序
+            sorted_temp_profile = [temp_profile[i] for i in sorted_indices]
+            sorted_temp_room_boundary = [temp_room_boundary[i] for i in sorted_indices]
 
+            sorted_temp_profile.insert(0, data_boxes[0])
+            for j in range(len(sorted_temp_room_boundary)):
+                boundary_data.append({'param': sorted_temp_room_boundary[j].astype(np.int32), 'uid': f'{i + theta_id:06}_{j+1}'})
+            profile_data.append({'profile': sorted_temp_profile, 'uid': f'{i + theta_id:06}'})
+
+            # boundary_data.append(
+            #     {'param': room_boundary_type.astype(np.int32), 'uid': f'{i * 4 + theta_id:06}_{index}'})
+            # profile_data.append({'profile': data_boxes, 'uid': f'{i * 4 + theta_id:06}'})
+    mean_area_ratio = np.mean(area_ratios)
+    print("平均面积比例（normalize 前 / 后）:", mean_area_ratio)
     return boundary_data, profile_data
-
-
-def gen_profile_data(ret, if_rotation=True):
-    profile = []
-    if if_rotation:
-        theta_list = [0, np.pi, np.pi / 2, -np.pi / 2]
-    else:
-        theta_list = [0]
-
-    # 使用 tqdm 来显示进度条
-    for i, key in enumerate(tqdm(list(ret.keys()), desc='Generating profile data')):
-
-        index = i
-        for theta in theta_list:
-
-            data_boxes = []
-            boundary = ret[key]['boundary'][:, :2]
-            xmin, ymin = boundary.min(axis=0)
-            xmax, ymax = boundary.max(axis=0)
-            boundary_non_norm = profile_rotation(
-                np.array([xmin, ymin, xmax, ymax])
-                , theta)
-            boundary_profile = normalize(boundary_non_norm, boundary_non_norm, 'profile')
-
-
-            data_boxes.append(boundary_profile)
-
-            for box in ret[key]['box']:
-                if len(box) != 0:
-                    box = profile_rotation(box, theta)
-                    box = normalize(box, boundary_non_norm, 'profile')
-                    data_boxes.append(box)
-            profile.append(
-                {'profile': data_boxes, 'uid': f'{index:06}'}
-            )
-    return profile
-
-
-import pylab as plt
-
-
-def boundary_plot(data, uid):
-    uid_list = [entry for entry in data if uid in entry['uid']]
-    plt.figure(figsize=(8, 8))
-    for _ in uid_list:
-        points = _['param']
-        points = np.vstack([points, points[0]])
-
-        plt.plot(points[:, 0], points[:, 1], marker='o', linestyle='-', color='b')
-        plt.fill(points[:, 0], points[:, 1], 'b', alpha=0.1)  # Light fill for visibility
-        plt.axis('equal')
-    plt.show()
-
-
-def profile_plot(data, uid):
-    uid_list = [entry for entry in data if uid in entry['uid']]
-    plt.figure(figsize=(8, 8))
-    for _ in uid_list:
-        points = _['param']
-        xmin, ymin, xmax, ymax = points
-        square_points = np.array([
-            [xmin, ymin],
-            [xmin, ymax],
-            [xmax, ymax],
-            [xmax, ymin],
-            [xmin, ymin]
-        ])
-
-        plt.plot(square_points[:, 0], square_points[:, 1], marker='o', linestyle='-', color='r')
-        plt.fill(square_points[:, 0], square_points[:, 1], alpha=0.2)  # Light fill for visibility
-
-        plt.axis('equal')
-    plt.show()
-
 
 if __name__ == '__main__':
 
@@ -329,7 +255,7 @@ if __name__ == '__main__':
 
     # profile的uid按照场景id给出，profile数据就是每个房间的包围盒。loop的uid对应profile，每个房间给loop：00001_0,00001_1,这里loop的顺序和profile不需要对应。但每个都要给出唯一的uid。
 
-    # 生成准备数据
+    #RPLAN数据集
     ret = {}
     for i in range(8):
         with open(f'data{i}.pkl', 'rb') as f:
@@ -391,4 +317,61 @@ if __name__ == '__main__':
             pickle.dump(boundary, file)
 
     print("数据集已成功划分并保存为 train.pkl, val.pkl 和 test.pkl")
+
+    #LIFULL数据集
+    # with open('LIFULL.pkl', 'rb') as f:
+    #     data = pickle.load(f)
+    #boundary, profile = gen_data(ret)
+
+    # # 划分数据集
+    # total_size = len(boundary)
+    # train_size = int(0.7 * total_size)
+    # val_size = int(0.2 * total_size)
+    # test_size = total_size - train_size - val_size
+    #
+    # # 计算训练集、验证集和测试集的索引
+    # train_indices = range(train_size)
+    # val_indices = range(train_size, train_size + val_size)
+    # test_indices = range(train_size + val_size, total_size)
+    #
+    # # 根据索引划分数据集
+    # train_boundary = [boundary[i] for i in train_indices]
+    # val_boundary = [boundary[i] for i in val_indices]
+    # test_boundary = [boundary[i] for i in test_indices]
+    #
+    # # 保存数据集
+    # file_paths = ['LIFULL_loop\\train.pkl', 'LIFULL_loop\\val.pkl', 'LIFULL_loop\\test.pkl']
+    # datasets = [train_boundary, val_boundary, test_boundary]
+    #
+    # for path, dataset in zip(file_paths, datasets):
+    #     with open(path, 'wb') as file:
+    #         pickle.dump(dataset, file)
+    #
+    # print("数据集已成功划分并按顺序保存为 train.pkl, val.pkl 和 test.pkl")
+    # #
+    # # profile = gen_profile_data(ret)
+    # total_size = len(profile)
+    # train_size = int(0.7 * len(profile))
+    # val_size = int(0.2 * len(profile))
+    # test_size = len(profile) - train_size - val_size
+    #
+    # # 计算训练集、验证集和测试集的索引
+    # train_indices = range(train_size)
+    # val_indices = range(train_size, train_size + val_size)
+    # test_indices = range(train_size + val_size, total_size)
+    #
+    # # 根据索引划分数据集
+    # train_boundary = [profile[i] for i in train_indices]
+    # val_boundary = [profile[i] for i in val_indices]
+    # test_boundary = [profile[i] for i in test_indices]
+    #
+    # # 保存数据集
+    # file_paths = ['LIFULL_profile\\train.pkl', 'LIFULL_profile\\val.pkl', 'LIFULL_profile\\test.pkl']
+    # boundaries = [train_boundary, val_boundary, test_boundary]
+    #
+    # for file_path, boundary in zip(file_paths, boundaries):
+    #     with open(file_path, 'wb') as file:
+    #         pickle.dump(boundary, file)
+    #
+    # print("数据集已成功划分并保存为 train.pkl, val.pkl 和 test.pkl")
 
