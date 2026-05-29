@@ -1,45 +1,25 @@
-# RPLAN-json
+# RPLAN_Toolbox
 
-## 1.annotation.json表示
+new_jason分支主要是对于RPLAN数据集进行处理，转化为TLC-PLAN的训练数据，同时包含论文中所有方法的对比可视化的处理代码。
 
-```
-"line":[{"direction":{}, "ID": , "point": []}]			direction表示点延申的方向， 
+## hnc_data.py
 
+这部分代码主要是对RPLAN数据集以及LIFULL数据集进行处理，将其中的json格式表示提取出来，同时对每个房间进行排序，在保存为pkl数据。用于TLC-PLAN部分的
 
-"semantics":[{"planeID":[], "type": "outwall"  , "ID": } ,
+其中profile_data中保存的是各个房间的bbox数据，存储格式是``[type, min_x,min_y,max_x,max_y]``.
 
-			 {"planeID":[], "type": "window"  , "ID": } ]
+boundary_data中保存的是各个房间的角点数据，存储格式是``[[type, point1, point2, ....], [type, point1, point2, ....]]``.
 
-
-"junctions":[{"coordinate": [ , , ,], "ID": } ]     #junction里保存所有点的信息。
-
-"plane": [{"offset": , "type": , "ID": , "normal": ,} ]      type:floor,wall,ceiling, 			
-
-"planeLineMatrix":
-
-"lineJunctionMatrix"     
-```
-
-由点Junction，线line，面plane组成，每个点记录交点也就是所有的角点，线只记录一个起始点和方向direction，由planeLineMatrix来记录line对应的两个端点Junction，面只有偏移量offset，type：（floor，wall，ceiling）这三个类型，normal法向量。offset是由法向量到原点的距离决定。
+代码中以7：2：1划分为训练集，测试集和验证集。
 
 
 
-## 2.json解析器
+## iplan_pixel2channel.py      maskplan_pixel2channel.py
 
-**S3Dparse.py**中主要实现从外墙和每个房间的角点，房间类型，以及窗户和门数据中提取出对应json文件的数据，返回一个result字典。
-
-**S3Dtest.py**主要是对RPLAN的原始点数据进行处理，从中心墙线获取房间角点，外墙角点。门窗数据
+这部分代码是将iplan和maskplan结果中的栅格图转化为RPLAN原始格式的四通道图，以便后续可视化处理过程中加入门窗。
 
 
 
+## GSDiff_test.py      Graph2plan_test.py   MASKPLAN_test.py   TLC_test.py   rplan_test.py
 
-
-### **使用：**
-
-​	将**input_dir**替换为自己的rplan数据集路径
-
-​	将output_dir替换为输出路径
-
-​	index_forma设置文件命名格式，05d是s3d的命名格式
-
-​	maxfiles控制处理数量
+这部分代码是对于处理之后的数据转化为论文中的可视化结果代码。
